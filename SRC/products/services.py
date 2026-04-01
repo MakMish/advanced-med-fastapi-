@@ -1,6 +1,9 @@
 from .schemas import tablepro
-def xsz(db):
-    v=db.query(tablepro).all()
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+async def xsz(db : AsyncSession):
+    result=await db.execute(select(tablepro))
+    v=result.scalars().all()
     if v is None:
             return{
                     "status":"no order"
@@ -10,22 +13,22 @@ def xsz(db):
         "products":v
     }
     
-def  cse(data,dba):
+async def  cse(data,dba:AsyncSession):
             m=tablepro(
             product=data.product,
             quantity=data.quantity
                  )
             dba.add(m)
-            dba.commit()
-            dba.refresh(m)
+            await dba.commit()
+            await dba.refresh(m)
             return{
                 "status":"data added"
             }
-def cce(i_d,dba):
-       x=dba.query(tablepro).filter(tablepro.order_id==i_d).first()
-       dba.delete(x)
-       dba.commit()
-       dba.refresh(x)
+async def cce(i_d,dba:AsyncSession):
+       result=await dba.execute(select(tablepro).where(tablepro.order_id==i_d))
+       x=result.scalars().first()
+       await dba.delete(x)
+       await dba.commit()
        return{
         "status":" product cancelled"
        }

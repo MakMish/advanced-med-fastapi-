@@ -1,71 +1,78 @@
 from fastapi import Depends
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.security import OAuth2PasswordRequestForm
-from utils.dbconnection import get_db,engine,Base
+from utils.dbconnection import get_db
 from .schemas import user_table
 import cloudinary
+from sqlalchemy import select
 import cloudinary.uploader
 from passlib.context import CryptContext
 from utils.authenticutils import create_refresh_token
-from .models import data,urespmodel
+from .models import data
+from model import setting
 pwd_context=CryptContext(schemes=["bcrypt"],deprecated="auto")
+mk=setting()
 cloudinary.config(
-    cloud_name = "dlnrhk4hj", 
-    api_key = "696748244379315", 
-    api_secret = "_eS3yKJk4RM3VBNXonMEMD7i7NI",
+    cloud_name=mk.cloud_name, 
+    api_key=mk.api_key, 
+    api_secret=mk.api_secret,
     secret=True
 )
 
-def sab(dba:Session=Depends(get_db)):
-    data=dba.query(user_table).all()
+async def sab(dba:AsyncSession):
+    result=await dba.execute(select(user_table))
+    data=result.scalars().all()
     if data is None:
         return None
-    return data
+    return  data
 
-def lin(data:OAuth2PasswordRequestForm=Depends(),dba:Session=Depends(get_db)):
-    og=dba.query(user_table).filter(user_table.uemail==data.username).first()
-    if og is None:
-        return{
-            "status":"you need to signin"
-        }
-    x=pwd_context.verify(data.password,og.hash_upassword)
-    if x==True:
-        return{
-            "hurray":"youn logged in boy"
-        }
-    return {
-        "sorry": " your password is incorrect"
-    }
+async def sin(user_data: data, dba: AsyncSession):
+    token = create_refresh_token({"email": user_data.uemail})
 
-def sin(data: data, dba: Session = Depends(get_db)):
-    token = create_refresh_token({
-        "email": data.uemail
-    })
-
-    v = user_table(
-        uname=data.username,
-        uemail=data.uemail,
-        umobile=str(data.umobile),
-        uaddress=data.uaddress,
-        hash_upassword=pwd_context.hash(data.password),
+    user = user_table(
+        uname=user_data.username,
+        uemail=user_data.uemail,
+        hash_upassword=pwd_context.hash(user_data.password),
+        umobile=user_data.umobile,
+        uaddress=user_data.uaddress,
         ref_token=token
     )
 
-    dba.add(v)
-    dba.commit()
-    dba.refresh(v)
+    dba.add(user)
+    await dba.commit()
+    await dba.refresh(user)
+
+    return {"refresh_token": token}
+
+async def sin(data: data, dba: AsyncSession):
+    token = create_refresh_token({
+        "email": data.uemail
+    })
+    data=user_table(
+        uname=data.username,
+        uemail=data.uemail,
+        hash_upassword=pwd_context.hash(data.password),
+        umobile=data.umobile,
+        uaddress=data.uaddress,
+        ref_token=token
+    )
+    dba.add(data)
+    await dba.commit()
+    await dba.refresh(data)
 
     return {
         "refresh_token": token
     }
 
-def upld(file):
+
+async def upld(file):
     max_size=2*1024*1024
-    if file.size> max_size:
+    content=await file.read()
+    if len(content)> max_size:
         return{
             "file status": " file is too large"
         }
-    result=cloudinary.uploader.upload(file.file)
+    result=await cloudinary.uploader.upload(file.file)
     return{
         "sec_url": result["secure_url"],
         "url": result.get("url")

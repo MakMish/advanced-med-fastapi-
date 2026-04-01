@@ -1,32 +1,32 @@
 from fastapi import APIRouter,Depends,UploadFile,File
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.security import OAuth2PasswordRequestForm
 from utils.dbconnection import get_db
-import services
+import users.services
 from .models import data,urespmodel
 
 
-router=APIRouter(prefix="user")
+router=APIRouter(prefix="/user")
 
 
 @router.get("/admin/all",response_model=list[urespmodel])
-def hex(dba:Session=Depends(get_db)):
-    return services.sab(dba)
+async def hex(dba:AsyncSession=Depends(get_db)):
+    return await users.services.sab(dba)
 
 
 @router.post("/login")
-def vex(data:OAuth2PasswordRequestForm=Depends(),dba:Session=Depends(get_db)):
-    return services.lin(data,dba)
+async def vex(data:OAuth2PasswordRequestForm=Depends(),dba:AsyncSession=Depends(get_db)):
+     return await users.services.lin(data,dba)
 
 
 @router.post("/signin")
-def rex(data: data, dba: Session = Depends(get_db)):
-    return services.sin(data,dba)
+async def rex(data: data, dba: AsyncSession = Depends(get_db)):
+    return await users.services.sin(data,dba)
 
 
 @router.post("/upload")
-def dex(file:UploadFile=File()):
-    return services.upld(file)
+async def dex(file:UploadFile=File(...)):
+    return await users.services.upld(file)
     
 
 

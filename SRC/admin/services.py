@@ -1,17 +1,16 @@
-from fastapi import APIRouter,Depends
-from sqlalchemy.orm import Session
-from utils.dbconnection import get_db
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from .schemas import tablerec
-from .models import xer
-
-def abc(dba):
-    p=dba.query(tablerec).all()
+async def abc(dba : AsyncSession):
+    data=await dba.execute(select(tablerec))
+    p=data.scalars().all()
     return{
         "data":p
     }
 
-def dce(m,dba):
-    v=dba.query(tablerec).filter(tablerec.date==m).all()
+async def dce(m,dba:AsyncSession):
+    result=await dba.execute(select(tablerec).where(tablerec.date==m))
+    v=result.scalars().all()
     if v is None:
         return{
             "status":"invalid date"

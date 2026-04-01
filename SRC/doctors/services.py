@@ -3,20 +3,22 @@ from .schemas import doctab
 import cloudinary
 import cloudinary.uploader
 from passlib.context import CryptContext
+from sqlalchemy.ext.asyncio import AsyncSession
+from model import setting
 from utils.authenticutils import create_refresh_token
-
-
+from sqlalchemy import select
 pwd_context=CryptContext(schemes=["bcrypt"],deprecated="auto")
 cloudinary.config(
-    cloud_name = "dlnrhk4hj", 
-    api_key = "696748244379315", 
-    api_secret = "_eS3yKJk4RM3VBNXonMEMD7i7NI",
+    cloud_name = setting().cloud_name, 
+    api_key = setting().api_key, 
+    api_secret =setting().api_secret,
     secret=True
 )
 
 
-def sab(dba):
-    data=dba.query(doctab).all()
+async def sab(dba : AsyncSession):
+    result=await dba.execute(select(doctab))
+    data=result.scalars().all()
     if data is None:
         return None
     return data
@@ -24,18 +26,17 @@ def sab(dba):
 
 
 
-def login(data, db):
-
-    doctor = db.query(doctab).filter(doctab.email == data.email).first()
-
+async def login(data, db : AsyncSession):
+    result=await db.execute(select(doctab).where(doctab.email==data.email))
+    doctor =result.scalars().first()
     if not doctor:
         raise HTTPException(status_code=404, detail="Doctor not found")
     pwd_context.verify(data.password,doctor.password)
+    return{
+        "status":"logged in"
+    }
 
-
-
-
-def sin(data, dba):
+async def sin(data, dba:AsyncSession):
     token = create_refresh_token({
         "email": data.uemail
     })
@@ -51,9 +52,9 @@ def sin(data, dba):
         password=ps
     )
 
-    dba.add(v)
-    dba.commit()
-    dba.refresh(v)
+    await dba.add(v)
+    await dba.commit()
+    await dba.refresh(v)
 
     return {
         "refresh_token": token
@@ -61,7 +62,7 @@ def sin(data, dba):
 
 
 
-def upld(i_d,file,dba):
+async def upld(i_d,file,dba:AsyncSession):
     max_size=2*1024*1024
     if file.size> max_size:
         return{
@@ -69,14 +70,15 @@ def upld(i_d,file,dba):
         }
     result=cloudinary.uploader.upload(file.file)
     v=result.get("url")
-    x=dba.query(doctab).filter(doctab.doc_id==i_d).first()
+    data= await dba.execute(select(doctab).where(doctab.doc_id==i_d))
+    x=data.scalars().first()
     if x is None:
         return{
             "status":"not a valid id"
         }
     x.img_url=v
-    dba.commit()
-    dba.refresh(v)
+    await dba.commit()
+    await dba.refresh(v)
     return{
         "status":"success"
     }

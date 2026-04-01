@@ -1,6 +1,10 @@
-from pydantic_settings import BaseSettings,SettingsConfigDict
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
 class setting(BaseSettings):
-    model_config=SettingsConfigDict(env_file=".env",extra="ignore")
-    gapi_key:str
-    url:str
-setting()
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+    cloud_name: str
+    api_key: str
+    api_secret: str
+    url: str
+    

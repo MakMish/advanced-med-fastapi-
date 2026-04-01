@@ -1,30 +1,33 @@
 from .schemas import table1  
-
-def xsz(dba):
-    v=dba.query(table1).all()
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+async def xsz(dba:AsyncSession):
+    result=await dba.execute(select(table1))
+    v=result.scalars().all()
     dba.commit()
     return{
         "orders":v
     }
 
 
-def  cse(data, dba):
+async def  cse(data, dba:AsyncSession):
             m=table1(
             product=data.product,
             quantity=data.quantity
                  )
-            dba.add(m)
-            dba.commit()
-            dba.refresh(m)
+            await dba.add(m)
+            await dba.commit()
+            await dba.refresh(m)
             return{
                 "status":"data added"
             }
 
-def cce(i_d,dba):
-       x=dba.query(table1).filter(table1.order_id==i_d).first()
-       dba.delete(x)
-       dba.commit()
-       dba.refresh(x)
+async def cce(i_d,dba:AsyncSession):
+       result=await dba.execute(select(table1).where(table1.order_id==i_d))
+       x=result.scalars().first()
+       await dba.delete(x)
+       await dba.commit()
+       await dba.refresh(x)
        return{
         "status":" order cancelled"
        }
