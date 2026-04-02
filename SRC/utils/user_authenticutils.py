@@ -1,6 +1,8 @@
 from jose import jwt, JWTError
 from datetime import datetime, timedelta
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+import pytz
+from sqlalchemy import select
 from users.schemas import user_table
 SECRET_KEY = "mymedapp"
 ALGORITHM = "HS256"
@@ -10,8 +12,7 @@ EXP_TIME_REFRESHTOKEN_DAYS = 1
 def create_refresh_token(data: dict):
     try:
         to_encode = data.copy()
-        expire = datetime.now() + timedelta(days=EXP_TIME_REFRESHTOKEN_DAYS)
-
+        expire = datetime.now(pytz.timezone("Asia/Kolkata")) + timedelta(days=EXP_TIME_REFRESHTOKEN_DAYS)
         to_encode.update({"exp": expire})
 
         token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
@@ -23,16 +24,16 @@ def create_refresh_token(data: dict):
 
 
 # 🔹 CREATE ACCESS TOKEN
-def create_access_token(reftok: str, dba: Session):
+async def create_access_token(reftok: str, dba: AsyncSession):
     try:
-        user = dba.query(user_table).filter(user_table.ref_token == reftok).first()
-
+        payload=jwt.decode(reftok,SECRET_KEY,algorithms=[ALGORITHM])
+        result = await dba.execute(select(user_table).where(user_table.uemail==payload.get("email")))
+        user=result.scalars().first()
         if user is None:
             return {"status": "invalid refresh token"}
 
         data = {"email": user.uemail}
         to_encode = data.copy()
-
         expire = datetime.now() + timedelta(minutes=EXP_TIME_ACCESSTOKEN_MIN)
         to_encode.update({"exp": expire})
 
@@ -41,16 +42,17 @@ def create_access_token(reftok: str, dba: Session):
         return token
 
     except JWTError:
-        return None
+        return {
+            "status":"invalid token"
+        }
     
 
 # 🔹 VERIFY REFRESH TOKEN
-def verify_reftok(reftok: str, dba: Session):
+async def verify_reftok(reftok: str, dba: AsyncSession):
     try:
         payload = jwt.decode(reftok, SECRET_KEY, algorithms=[ALGORITHM])
-
-        user = dba.query(user_table).filter(user_table.uemail == payload.get("email")).first()
-
+        result = await dba.execute(select(user_table).where(user_table.uemail==payload.get("email")))
+        user=result.scalars().first()
         if user is None:
             return {"status": "invalid user"}
 
@@ -61,14 +63,14 @@ def verify_reftok(reftok: str, dba: Session):
 
 
 # 🔹 VERIFY ACCESS TOKEN
-def verify_acctok(acctok: str, dba: Session):
+async def verify_acctok(acctok: str, dba: AsyncSession):
     try:
         payload = jwt.decode(acctok, SECRET_KEY, algorithms=[ALGORITHM])
 
         email = payload.get("email")
 
-        user = dba.query(user_table).filter(user_table.uemail == email).first()
-
+        result = await dba.execute(select(user_table).where(user_table.uemail==payload.get("email")))
+        user=result.scalars().first()
         if user is None:
             return {"status": "user not found"}
 
