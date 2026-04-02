@@ -1,7 +1,4 @@
-from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi.security import OAuth2PasswordRequestForm
-from utils.dbconnection import get_db
 from .schemas import user_table
 import cloudinary
 from sqlalchemy import select
