@@ -1,8 +1,7 @@
 from jose import jwt, JWTError
 from fastapi import HTTPException
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta,timezone
 from sqlalchemy.ext.asyncio import AsyncSession
-import pytz
 from sqlalchemy import select
 from model import setting
 from doctors.schemas import doctab
@@ -14,7 +13,7 @@ EXP_TIME_REFRESHTOKEN_DAYS = 1
 def create_refresh_token(data: dict):
     try:
         to_encode = data.copy()
-        expire = datetime.now(pytz.timezone("Asia/Kolkata")) + timedelta(days=EXP_TIME_REFRESHTOKEN_DAYS)
+        expire = datetime.now(timezone.utc()) + timedelta(days=EXP_TIME_REFRESHTOKEN_DAYS)
         to_encode.update({"exp": expire})
 
         token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
