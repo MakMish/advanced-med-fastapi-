@@ -1,11 +1,13 @@
 from jose import jwt, JWTError
 from datetime import datetime, timedelta
+from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 import pytz
+from model import setting
 from sqlalchemy import select
 from users.schemas import user_table
-SECRET_KEY = "mymedapp"
-ALGORITHM = "HS256"
+SECRET_KEY = setting().SECRET_KEY
+ALGORITHM = setting().ALGORITHM
 EXP_TIME_ACCESSTOKEN_MIN = 15
 EXP_TIME_REFRESHTOKEN_DAYS = 1
 # 🔹 CREATE REFRESH TOKEN
@@ -20,7 +22,7 @@ def create_refresh_token(data: dict):
         return token 
 
     except JWTError:
-        return None
+        raise HTTPException(status_code=404,detail="teoken expired")
 
 
 # 🔹 CREATE ACCESS TOKEN
@@ -30,7 +32,7 @@ async def create_access_token(reftok: str, dba: AsyncSession):
         result = await dba.execute(select(user_table).where(user_table.uemail==payload.get("email")))
         user=result.scalars().first()
         if user is None:
-            return {"status": "invalid refresh token"}
+           raise HTTPException(status_code=401,detail="invalid refresh token")
 
         data = {"email": user.uemail}
         to_encode = data.copy()
@@ -42,9 +44,7 @@ async def create_access_token(reftok: str, dba: AsyncSession):
         return token
 
     except JWTError:
-        return {
-            "status":"invalid token"
-        }
+       raise HTTPException(status_code=404,detail="teoken expired")
     
 
 # 🔹 VERIFY REFRESH TOKEN
@@ -54,27 +54,24 @@ async def verify_reftok(reftok: str, dba: AsyncSession):
         result = await dba.execute(select(user_table).where(user_table.uemail==payload.get("email")))
         user=result.scalars().first()
         if user is None:
-            return {"status": "invalid user"}
+            raise HTTPException(status_code=401,detail="invalid refresh token")
 
         return {"status": "valid refresh token"}
 
     except JWTError:
-        return {"status": "expired or invalid refresh token"}
+        raise HTTPException(status_code=404,detail=" token expired")
 
 
 # 🔹 VERIFY ACCESS TOKEN
 async def verify_acctok(acctok: str, dba: AsyncSession):
     try:
         payload = jwt.decode(acctok, SECRET_KEY, algorithms=[ALGORITHM])
-
-        email = payload.get("email")
-
         result = await dba.execute(select(user_table).where(user_table.uemail==payload.get("email")))
         user=result.scalars().first()
         if user is None:
-            return {"status": "user not found"}
+           raise HTTPException(status_code=401,detail="invalid refresh token")
 
         return {"status": "logged in"}
 
     except JWTError:
-        return {"status": "expired or invalid access token"}
+        raise HTTPException(status_code=404,detail="token expired")

@@ -7,4 +7,6 @@ class setting(BaseSettings):
     api_key: str
     api_secret: str
     url: str
+    SECRET_KEY : str
+    ALGORITHM : str
     

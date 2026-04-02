@@ -1,11 +1,13 @@
 from jose import jwt, JWTError
+from fastapi import HTTPException
 from datetime import datetime, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 import pytz
 from sqlalchemy import select
+from model import setting
 from doctors.schemas import doctab
-SECRET_KEY = "mymedapp"
-ALGORITHM = "HS256"
+SECRET_KEY = setting().SECRET_KEY
+ALGORITHM = setting().ALGORITHM
 EXP_TIME_ACCESSTOKEN_MIN = 15
 EXP_TIME_REFRESHTOKEN_DAYS = 1
 # 🔹 CREATE REFRESH TOKEN
@@ -20,8 +22,7 @@ def create_refresh_token(data: dict):
         return token 
 
     except JWTError:
-        return None
-
+        raise HTTPException(status_code=404,detail="teoken expired")
 
 # 🔹 CREATE ACCESS TOKEN
 async def create_access_token(reftok: str, dba: AsyncSession):
@@ -42,8 +43,7 @@ async def create_access_token(reftok: str, dba: AsyncSession):
         return token
 
     except JWTError:
-        return None
-    
+        raise HTTPException(status_code=404,detail="teoken expired")
 
 # 🔹 VERIFY REFRESH TOKEN
 async def verify_reftok(reftok: str, dba: AsyncSession):
@@ -57,7 +57,7 @@ async def verify_reftok(reftok: str, dba: AsyncSession):
         return {"status": "valid refresh token"}
 
     except JWTError:
-        return {"status": "expired or invalid refresh token"}
+       raise HTTPException(status_code=404,detail="teoken expired")
 
 
 # 🔹 VERIFY ACCESS TOKEN
@@ -75,4 +75,4 @@ async def verify_acctok(acctok: str, dba: AsyncSession):
         return {"status": "logged in"}
 
     except JWTError:
-        return {"status": "expired or invalid access token"}
+        raise HTTPException(status_code=404,detail="teoken expired")
