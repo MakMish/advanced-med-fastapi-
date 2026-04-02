@@ -75,3 +75,15 @@ async def verify_acctok(acctok: str, dba: AsyncSession):
 
     except JWTError:
         raise HTTPException(status_code=404,detail="teoken expired")
+    
+async def logout(reftok:str,dba:AsyncSession):
+    try:
+        result=await dba.execute(select(doctab).where(doctab.ref_token==reftok))
+        user=result.scalars().first()
+        if user is None:
+            raise HTTPException(status_code=405,detail="user isn't exists")
+        await dba.delete(user)
+        await dba.commit()
+        await dba.refresh(user)
+    except:
+        raise HTTPException(status_code=404,detail="internal error")

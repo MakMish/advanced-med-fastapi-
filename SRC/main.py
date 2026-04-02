@@ -9,8 +9,7 @@ from utils.dbconnection import get_db
 from sqlalchemy.orm import Session
 from doctors.routes import router as doc_route
 from appointment.routes import router as apt_route
-from datetime import datetime
-import pytz
+from datetime import datetime,timezone
 from products.routes import router as product_router
 from utils.dbconnection import Base,engine
 from fastapi.middleware.cors import CORSMiddleware
@@ -38,7 +37,7 @@ app.include_router(apt_route)
 @app.post("/ai")
 async def gt(tes:data,dba:Session=Depends(get_db)):
         Limit=5
-        x=datetime.now(pytz.timezone("Asia/kolkata")).date()
+        x=datetime.now(timezone.utc).date()
         client=genai.Client(api_key=setting().gapi_key)
         response=client.models.generate_content(
               model="gemini-2.5-flash-lite",
