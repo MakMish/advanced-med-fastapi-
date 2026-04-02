@@ -13,7 +13,7 @@ EXP_TIME_REFRESHTOKEN_DAYS = 1
 def create_refresh_token(data: dict):
     try:
         to_encode = data.copy()
-        expire = datetime.now(timezone.utc()) + timedelta(days=EXP_TIME_REFRESHTOKEN_DAYS)
+        expire = datetime.now(timezone.utc) + timedelta(days=EXP_TIME_REFRESHTOKEN_DAYS)
         to_encode.update({"exp": expire})
 
         token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
@@ -34,7 +34,7 @@ async def create_access_token(reftok: str, dba: AsyncSession):
 
         data = {"email": user.uemail}
         to_encode = data.copy()
-        expire = datetime.now() + timedelta(minutes=EXP_TIME_ACCESSTOKEN_MIN)
+        expire = datetime.now(timezone.utc) + timedelta(minutes=EXP_TIME_ACCESSTOKEN_MIN)
         to_encode.update({"exp": expire})
 
         token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
