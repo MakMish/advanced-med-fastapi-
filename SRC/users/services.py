@@ -1,19 +1,23 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from .schemas import user_table
+from SRC.users.schemas import user_table
+from fastapi import UploadFile,File
 import cloudinary
 from sqlalchemy import select
+from fastapi import HTTPException
+from fastapi.security import OAuth2PasswordRequestForm
 import cloudinary.uploader
+from cloudinary import GeneralError
 from passlib.context import CryptContext
-from utils.user_authenticutils import create_refresh_token
-from .models import data
-from model import setting
+from SRC.utils.user_authenticutils import create_refresh_token
+from SRC.users.models import data
+from SRC.model import setting
 pwd_context=CryptContext(schemes=["bcrypt"],deprecated="auto")
-mk=setting()
-cloudinary.config(
-    cloud_name=mk.cloud_name, 
-    api_key=mk.api_key, 
-    api_secret=mk.api_secret,
-    secret=True
+mak=setting()
+cloudinary.config( 
+    cloud_name=mak.cloud_name, 
+    api_key=mak.api_key, 
+    api_secret=mak.api_secret,
+    secure = True
 )
 
 async def sab(dba:AsyncSession):
@@ -41,37 +45,33 @@ async def sin(user_data: data, dba: AsyncSession):
 
     return {"refresh_token": token}
 
-async def sin(data: data, dba: AsyncSession):
-    token = create_refresh_token({
-        "email": data.uemail
-    })
-    data=user_table(
-        uname=data.username,
-        uemail=data.uemail,
-        hash_upassword=pwd_context.hash(data.password),
-        umobile=data.umobile,
-        uaddress=data.uaddress,
-        ref_token=token
-    )
-    dba.add(data)
-    await dba.commit()
-    await dba.refresh(data)
+async def lin(data:OAuth2PasswordRequestForm, dba: AsyncSession):
+        result=await dba.execute(select(user_table).where(user_table.uemail==data.username))
+        value=result.scalars().first()
+        if value is None:
+            raise HTTPException(status_code=402,detail="user isn't exists")
+        x=pwd_context.verify(data.password,value.hash_upassword)
 
-    return {
-        "refresh_token": token
-    }
+        if x==False:
+             raise HTTPException(status_code=404,detail="false password")
+        else:
+             return{
+                  "status":"logged in"
+             }
 
-
-async def upld(file):
-    max_size=2*1024*1024
-    content=await file.read()
-    if len(content)> max_size:
-        return{
-            "file status": " file is too large"
-        }
-    result=await cloudinary.uploader.upload(file.file)
-    return{
+async def upld(file:UploadFile=File(...)):
+         if file is None:
+              return {
+                   "file":"empty"
+              }
+         max_size=2*1024*1024
+        #  content=await file.read()
+         if file.size > max_size:
+              raise HTTPException(status_code=488,detail="file is latrge")
+         result=cloudinary.uploader.upload(file.file)
+         return{
         "sec_url": result["secure_url"],
         "url": result.get("url")
-    }
+            }
+
 

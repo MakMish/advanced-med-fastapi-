@@ -1,9 +1,9 @@
-from fastapi import APIRouter,Depends
+from fastapi import APIRouter,Depends,Form
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import date
-from appointment import services
-from utils.dbconnection import get_db
-from .models import aptent
+from SRC.appointment import services
+from SRC.utils.dbconnection import get_db
+from SRC.appointment.models import aptent
 
 
 router=APIRouter(prefix="/apt")
@@ -19,7 +19,7 @@ async def vex(date:date,dba:AsyncSession=Depends(get_db)):
     return await services.sce(date,dba)
     
 @router.post("/book")          #24-05-2946
-async def rex(data:aptent,dba:AsyncSession=Depends(get_db)):
+async def rex(data:aptent=Form(...),dba:AsyncSession=Depends(get_db)):
     return await services.scb(data,dba)
 
 

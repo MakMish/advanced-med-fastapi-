@@ -1,4 +1,4 @@
-from utils.dbconnection import Base
+from SRC.utils.dbconnection import Base
 from datetime import datetime
 import pytz
 

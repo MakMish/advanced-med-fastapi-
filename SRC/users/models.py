@@ -3,13 +3,14 @@ class data(BaseModel):
     username:str
     uemail:str
     password:str
-    umobile:int
+    umobile:str
     uaddress:str
 
 class usermodellogin(BaseModel):
     email:str
     password:str
 class urespmodel(BaseModel):
+    id:int
     uname:str
     uemail:EmailStr
     umobile:int

@@ -2,9 +2,9 @@ from jose import jwt, JWTError
 from datetime import datetime, timedelta,timezone
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from model import setting
+from SRC.model import setting
 from sqlalchemy import select
-from users.schemas import user_table
+from SRC.users.schemas import user_table
 SECRET_KEY = setting().SECRET_KEY
 ALGORITHM = setting().ALGORITHM
 EXP_TIME_ACCESSTOKEN_MIN = 15

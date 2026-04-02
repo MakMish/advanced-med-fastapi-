@@ -1,11 +1,13 @@
-from fastapi import HTTPException
-from .schemas import doctab
+from fastapi import HTTPException,UploadFile,File,Form
+from SRC.doctors.schemas import doctab
 import cloudinary
+from SRC.doctors.models import data
+from SRC.doctors.models import docent
 import cloudinary.uploader
 from passlib.context import CryptContext
 from sqlalchemy.ext.asyncio import AsyncSession
-from model import setting
-from utils.doctor_authentic import create_refresh_token
+from SRC.model import setting
+from SRC.utils.doctor_authentic import create_refresh_token
 from sqlalchemy import select
 pwd_context=CryptContext(schemes=["bcrypt"],deprecated="auto")
 cloudinary.config(
@@ -27,7 +29,7 @@ async def sab(dba : AsyncSession):
 
 
 async def login(data, db : AsyncSession):
-    result=await db.execute(select(doctab).where(doctab.email==data.email))
+    result=await db.execute(select(doctab).where(doctab.email==data.username))
     doctor =result.scalars().first()
     if not doctor:
         raise HTTPException(status_code=404, detail="Doctor not found")
@@ -36,15 +38,15 @@ async def login(data, db : AsyncSession):
         "status":"logged in"
     }
 
-async def sin(data, dba:AsyncSession):
+async def sin(data:docent, dba:AsyncSession):
     token = create_refresh_token({
-        "email": data.uemail
+        "email": data.email
     })
     ps=pwd_context.hash(data.password)
 
     v = doctab(
         name=data.name,
-        proffession=data.proffession,
+        proffession=data.email,
         emg_cont=data.emg_mob,
         email=data.email,
         hospital_name=data.hospital_name,
@@ -52,7 +54,7 @@ async def sin(data, dba:AsyncSession):
         password=ps
     )
 
-    await dba.add(v)
+    dba.add(v)
     await dba.commit()
     await dba.refresh(v)
 
@@ -62,7 +64,7 @@ async def sin(data, dba:AsyncSession):
 
 
 
-async def upld(i_d,file,dba:AsyncSession):
+async def upld(dba:AsyncSession,i_d:int=Form(...),file:UploadFile=File(...)):
     max_size=2*1024*1024
     if file.size> max_size:
         return{
@@ -78,7 +80,7 @@ async def upld(i_d,file,dba:AsyncSession):
         }
     x.img_url=v
     await dba.commit()
-    await dba.refresh(v)
+    dba.refresh(v)
     return{
         "status":"success"
     }

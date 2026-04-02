@@ -1,4 +1,6 @@
-from .schemas import table1  
+from SRC.orders.schemas import table1  
+from fastapi import HTTPException
+from SRC.orders.models import data
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 async def xsz(dba:AsyncSession):
@@ -10,24 +12,26 @@ async def xsz(dba:AsyncSession):
     }
 
 
-async def  cse(data, dba:AsyncSession):
+async def  cse(data1, dba:AsyncSession):
             m=table1(
-            product=data.product,
-            quantity=data.quantity
+            product=data1.product,
+            quantity=data1.quantity,
+            uaddress=data1.uaddress
                  )
-            await dba.add(m)
+            dba.add(m)
             await dba.commit()
             await dba.refresh(m)
             return{
                 "status":"data added"
             }
 
-async def cce(i_d,dba:AsyncSession):
-       result=await dba.execute(select(table1).where(table1.order_id==i_d))
+async def cce(i_d:data,dba:AsyncSession):
+       result=await dba.execute(select(table1).where(table1.order_id==i_d.id))
        x=result.scalars().first()
+       if x is None:
+               raise HTTPException(status_code=416,detail="order not found")
        await dba.delete(x)
        await dba.commit()
-       await dba.refresh(x)
        return{
         "status":" order cancelled"
        }

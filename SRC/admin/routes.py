@@ -1,8 +1,8 @@
-from fastapi import APIRouter,Depends
+from fastapi import APIRouter,Depends,Form
 from sqlalchemy.ext.asyncio import AsyncSession
-from utils.dbconnection import get_db
-from .models import xer
-from admin import services
+from SRC.utils.dbconnection import get_db
+from SRC.admin.models import xer
+from SRC.admin import services
 
 routes2=APIRouter(
     prefix="/history"
@@ -16,6 +16,6 @@ async def hex(dba:AsyncSession=Depends(get_db)):
 
 
 @routes2.get("/order")
-async def rex(m:xer,dba:AsyncSession=Depends(get_db)):
-    return await services.dce(m,dba)
+async def rex(m:xer=Form(...),dba:AsyncSession=Depends(get_db)):
+    return await services.dce(dba,m)
     

@@ -1,4 +1,4 @@
-from .schemas import apttab
+from SRC.appointment.schemas import apttab
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 async def abc(dba:AsyncSession):
@@ -23,9 +23,9 @@ async def scb(data,dba:AsyncSession):
              time_slot=data.slot,
              datee1=data.da1
             )
-    await dba.add(v)
+    dba.add(v)
     await dba.commit()
-    await dba.refresh(v)
+    dba.refresh(v)
     return{
         "status": " appointment booked"
     }
@@ -33,9 +33,8 @@ async def scb(data,dba:AsyncSession):
 async def scd(i_d,dba:AsyncSession):
     result=await dba.execute(select(apttab).where(apttab.client_id==i_d))
     v=result.scalars().first()
-    dba.delete(v)
-    dba.commit()
-    dba.refresh(v)
+    await dba.delete(v)
+    await dba.commit()
     if v is None:
         return {
             "status":" not any apt"

@@ -1,9 +1,10 @@
-from fastapi import APIRouter,Depends,UploadFile,File
+from fastapi import APIRouter,Depends,UploadFile,File,Form
 from sqlalchemy.ext.asyncio import AsyncSession
-from utils.dbconnection import get_db
-from doctors import services
-from .models import docent,DoctorResponse
-
+from SRC.utils.dbconnection import get_db
+from SRC.doctors import services
+from SRC.doctors.models import data
+from SRC.doctors.models import docent
+from fastapi.security import OAuth2PasswordRequestForm
 
 router=APIRouter(prefix="/doctor")
 
@@ -13,8 +14,8 @@ async def hex(dba:AsyncSession=Depends(get_db)):
     return await services.sab(dba)
 
 
-@router.post("/login", response_model=DoctorResponse)
-async def vex(data: docent, db: AsyncSession=Depends(get_db)):
+@router.post("/login")
+async def vex(data:OAuth2PasswordRequestForm=Depends(), db: AsyncSession=Depends(get_db)):
     return await services.login(data,db)
 
 
@@ -23,9 +24,9 @@ async def rex(data: docent, dba: AsyncSession = Depends(get_db)):
    return await services.sin(data,dba)
 
 
-@router.post("/upload/{i_d}")
-async def dex(i_d:int,file:UploadFile=File(),dba:AsyncSession=Depends(get_db)):
-    return await services.upld(i_d,file,dba)
+@router.post("/upload")
+async def dex(i_d:int=Form(...),file:UploadFile=File(),dba:AsyncSession=Depends(get_db)):
+    return await services.upld(dba,i_d,file)
 
 
     

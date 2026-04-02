@@ -14,5 +14,8 @@ class DoctorResponse(BaseModel):
     hospital_name: str
     img_url: str
 
+class data(BaseModel):
+    id:int
+
     class Config:
         from_attributes = True   # (Pydantic v2)

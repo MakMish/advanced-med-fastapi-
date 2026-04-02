@@ -1,7 +1,7 @@
 from datetime import datetime
 import pytz
 from sqlalchemy import Integer,DateTime,Column,Boolean
-from utils.dbconnection import Base
+from SRC.utils.dbconnection import Base
 class tablerec(Base):
     __tablename__="admin_table"
     total_orders=Column(Integer)

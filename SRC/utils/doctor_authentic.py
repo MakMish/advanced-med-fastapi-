@@ -3,8 +3,8 @@ from fastapi import HTTPException
 from datetime import datetime, timedelta,timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from model import setting
-from doctors.schemas import doctab
+from SRC.model import setting
+from SRC.doctors.schemas import doctab
 SECRET_KEY = setting().SECRET_KEY
 ALGORITHM = setting().ALGORITHM
 EXP_TIME_ACCESSTOKEN_MIN = 15
