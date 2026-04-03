@@ -2,14 +2,14 @@ from fastapi import APIRouter,Depends,UploadFile,File,Form
 from sqlalchemy.ext.asyncio import AsyncSession
 from SRC.utils.dbconnection import get_db
 from SRC.doctors import services
-from SRC.doctors.models import data
+from SRC.doctors.models import DoctorResponse
 from SRC.doctors.models import docent
 from fastapi.security import OAuth2PasswordRequestForm
 
 router=APIRouter(prefix="/doctor")
 
 
-@router.get("/admin/all")
+@router.get("/admin/all",response_model=list[DoctorResponse])
 async def hex(dba:AsyncSession=Depends(get_db)):
     return await services.sab(dba)
 
