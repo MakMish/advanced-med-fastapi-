@@ -37,21 +37,18 @@ app.include_router(apt_route)
 @app.on_event("startup")
 async def on_startup():
       await init_db()
+
+      
+
 @app.post("/ai")
 async def gt(tes:data,dba:Session=Depends(get_db)):
         Limit=5
         x=datetime.now(timezone.utc).date()
-        client=genai.Client(api_key=setting().gapi_key)
+        client=genai.Client(api_key=mas.gapi_key)
         response=client.models.generate_content(
               model="gemini-2.5-flash-lite",
-              contents=f"""
-                    You are a helpful assistant.
-                    For common minor health issues, you can suggest general over-the-counter medicines with price range.
-                    Always include a disclaimer to consult a doctor.
-
-                        Question: {tes.rext}
-                        """
-        )    
+              contents=tes.rext
+        )
         return{
               "status":str(response.text)
         }

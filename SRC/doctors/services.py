@@ -1,7 +1,6 @@
 from fastapi import HTTPException,UploadFile,File,Form
 from SRC.doctors.schemas import doctab
 import cloudinary
-from SRC.doctors.models import data
 from SRC.doctors.models import docent
 import cloudinary.uploader
 from passlib.context import CryptContext

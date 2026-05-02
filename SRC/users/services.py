@@ -6,7 +6,6 @@ from sqlalchemy import select
 from fastapi import HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 import cloudinary.uploader
-from cloudinary import GeneralError
 from passlib.context import CryptContext
 from SRC.utils.user_authenticutils import create_refresh_token
 from SRC.users.models import data
@@ -46,7 +45,7 @@ async def sin(user_data: data, dba: AsyncSession):
     return {"refresh_token": token}
 
 async def lin(data:OAuth2PasswordRequestForm, dba: AsyncSession):
-        result=await dba.execute(select(user_table).where(user_table.uemail==data.username))
+        result=await dba.execute(select(user_table).offset(5).limit(5))
         value=result.scalars().first()
         if value is None:
             raise HTTPException(status_code=402,detail="user isn't exists")
