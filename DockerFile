@@ -1,8 +1,19 @@
+<<<<<<< HEAD
 # For more information, please refer to https://aka.ms/vscode-docker-python
 FROM python:3-slim
+=======
+FROM python:3.10-slim
 
-EXPOSE 8000
 
+WORKDIR /app
+
+
+COPY requirements.txt
+
+>>>>>>> parent of 24d4033 (dock changes)
+
+
+<<<<<<< HEAD
 # Keeps Python from generating .pyc files in the container
 ENV PYTHONDONTWRITEBYTECODE=1
 
@@ -23,3 +34,15 @@ USER appuser
 
 # During debugging, this entry point will be overridden. For more information, please refer to https://aka.ms/vscode-docker-python-debug
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "-k", "uvicorn.workers.UvicornWorker", "SRC.__init__:app"]
+=======
+RUN pip install --no-cache-dir -r requirements.txt
+
+
+COPY ..
+
+
+EXPOSE 800
+
+
+CMD ["uvicorn","SRC.main:app","--host","0.0.0.0","--port","8000"]
+>>>>>>> parent of 24d4033 (dock changes)
