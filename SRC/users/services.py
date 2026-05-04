@@ -23,7 +23,9 @@ async def sab(dba:AsyncSession):
     result=await dba.execute(select(user_table))
     data=result.scalars().all()
     if data is None:
-        return None
+        return {
+             "data":"no data"
+        }
     return  data
 
 async def sin(user_data: data, dba: AsyncSession):
