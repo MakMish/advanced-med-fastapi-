@@ -1,0 +1,45 @@
+name: CI/CD to AWS ECS
+
+on:
+  push:
+    branches: [master]
+
+env:
+  AWS_REGION: eu-north-1
+  ECR_REPOSITORY: docker-aws/my_repo
+  ECS_SERVICE: makdev-med-task-service-1hj4x5qp
+  ECS_CLUSTER: makdev-med-server
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        run: |
+          aws ecr get-login-password --region AWS_REGION \
+          | docker login --username AWS --password-stdin \
+          ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.AWS_REGION.amazonaws.com
+
+      - name: Build, tag, and push image
+        run: |
+          IMAGE_URI=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.AWS_REGION.amazonaws.com/ECR_REPOSITORY:latest
+          docker build -t IMAGE_URI .
+          docker push IMAGE_URI
+
+      - name: Deploy to ECS
+        run: |
+          aws ecs update-service \
+            --cluster ECS_CLUSTER \
+            --service ECS_SERVICE \
+            --force-new-deployment

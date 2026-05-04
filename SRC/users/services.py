@@ -42,7 +42,9 @@ async def sin(user_data: data, dba: AsyncSession):
     await dba.commit()
     await dba.refresh(user)
 
-    return {"refresh_token": token}
+    return {"refresh_token": token,
+            "status":"ci/cd working"
+            }
 
 async def lin(data:OAuth2PasswordRequestForm, dba: AsyncSession):
         result=await dba.execute(select(user_table).offset(5).limit(5))
