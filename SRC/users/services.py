@@ -43,7 +43,6 @@ async def sin(user_data: data, dba: AsyncSession):
     await dba.refresh(user)
 
     return {"refresh_token": token,
-            "status":"ci/cd working 2223333"
             }
 
 async def lin(data:OAuth2PasswordRequestForm, dba: AsyncSession):
