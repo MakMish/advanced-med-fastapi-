@@ -27,19 +27,18 @@ jobs:
 
       - name: Login to Amazon ECR
         run: |
-          aws ecr get-login-password --region AWS_REGION \
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} \
           | docker login --username AWS --password-stdin \
-          ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.AWS_REGION.amazonaws.com
+          ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
 
       - name: Build, tag, and push image
         run: |
-          IMAGE_URI=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.AWS_REGION.amazonaws.com/ECR_REPOSITORY:latest
-          docker build -t IMAGE_URI .
-          docker push IMAGE_URI
+          docker build -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:latest .
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:latest
 
       - name: Deploy to ECS
         run: |
           aws ecs update-service \
-            --cluster ECS_CLUSTER \
-            --service ECS_SERVICE \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --service ${{ env.ECS_SERVICE }} \
             --force-new-deployment
