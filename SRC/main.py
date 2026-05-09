@@ -39,7 +39,9 @@ async def on_startup():
       await init_db()
 
       
-
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
 @app.post("/ai")
 async def gt(tes:data,dba:Session=Depends(get_db)):
         Limit=5
