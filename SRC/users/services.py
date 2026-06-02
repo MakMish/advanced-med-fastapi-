@@ -58,7 +58,7 @@ async def lin(data:OAuth2PasswordRequestForm, dba: AsyncSession):
              raise HTTPException(status_code=404,detail="false password")
         else:
              return{
-                  "status":"logged in"
+                  "status":"logged in successful"
              }
 
 async def upld(file:UploadFile=File(...)):

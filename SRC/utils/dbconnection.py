@@ -3,6 +3,7 @@ from sqlalchemy.orm import sessionmaker,declarative_base
 from SRC.model import setting
 mas=setting()
 engine=create_async_engine(mas.url,
+                           connect_args={"ssl": "require"},
                            pool_size=10,
                            max_overflow=20,
                            pool_recycle=1800,
